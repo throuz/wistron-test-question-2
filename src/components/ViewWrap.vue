@@ -26,18 +26,14 @@ export default {
   }),
 
   created() {
-    const treeData = [];
     const groupFirst = [...new Set(MainGroup.items.map((item) => item[0]))];
     groupFirst.forEach((el) => {
-      treeData.push({ name: el, children: [] });
-    });
-    MainGroup.items.forEach((item) => {
-      treeData.forEach((nodeFirst) => {
-        this.addNode(nodeFirst, item[0], item[1]);
-      });
+      this.items.push({ name: el, children: [] });
     });
 
-    this.items = treeData;
+    MainGroup.items.forEach((item) => {
+      this.addSub(this.items, item[0], item[1]);
+    });
   },
 
   mounted() {
@@ -45,26 +41,23 @@ export default {
   },
 
   methods: {
-    addNode(parentNode, name, childrenName) {
-      if (parentNode.name === name) {
-        parentNode.children.push({ name: childrenName, children: [] });
-      }
-    },
     addSubGroup() {
       // Because @update:open is triggered when mounting, it is necessary to prevent the first rendering
       if (!this.firstTrigger && !this.isAddSub) {
         SubGroup.items.forEach((item) => {
-          this.items.forEach((nodeFirst) => {
-            nodeFirst.children.forEach((nodeSecond) => {
-              this.addNode(nodeSecond, item[1], item[0]);
-              nodeSecond.children.forEach((nodeThird) => {
-                this.addNode(nodeThird, item[1], item[0]);
-              });
-            });
-          });
+          this.addSub(this.items, item[1], item[0]);
         });
         this.isAddSub = true;
       }
+    },
+    addSub(items, name, nodeName) {
+      items.forEach((item) => {
+        if (item.name === name) {
+          item.children.push({ name: nodeName, children: [] });
+          return;
+        }
+        item.children && this.addSub(item.children, name, nodeName);
+      });
     },
   },
 };
