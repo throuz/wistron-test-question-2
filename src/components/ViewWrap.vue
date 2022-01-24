@@ -26,7 +26,6 @@ export default {
   }),
 
   created() {
-    // Reorganize MainGroup
     const treeData = [];
     const groupFirst = [...new Set(MainGroup.items.map((item) => item[0]))];
     groupFirst.forEach((el) => {
@@ -54,7 +53,6 @@ export default {
     addSubGroup() {
       // Because @update:open is triggered when mounting, it is necessary to prevent the first rendering
       if (!this.firstTrigger && !this.isAddSub) {
-        // Reorganize SubGroup
         SubGroup.items.forEach((item) => {
           this.items.forEach((nodeFirst) => {
             nodeFirst.children.forEach((nodeSecond) => {
