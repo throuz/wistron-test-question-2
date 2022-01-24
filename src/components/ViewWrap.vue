@@ -1,5 +1,10 @@
 <template>
-  <v-treeview :items="items" item-key="name" open-on-click>
+  <v-treeview
+    :items="items"
+    item-key="name"
+    open-on-click
+    @update:open="addSubGroup"
+  >
     <template v-slot:prepend="{ open }">
       <v-icon>
         {{ open ? "mdi-folder-open" : "mdi-folder" }}
@@ -16,52 +21,53 @@ export default {
 
   data: () => ({
     items: [],
+    firstTrigger: true,
+    isAddSub: false,
   }),
 
   created() {
-    const treeData = [];
     // Reorganize MainGroup
+    const treeData = [];
     const groupFirst = [...new Set(MainGroup.items.map((item) => item[0]))];
     groupFirst.forEach((el) => {
-      treeData.push({ name: el });
+      treeData.push({ name: el, children: [] });
     });
     MainGroup.items.forEach((item) => {
-      treeData.forEach((el) => {
-        if (el.name === item[0]) {
-          if (el.children) {
-            el.children.push({ name: item[1] });
-          } else {
-            el.children = [{ name: item[1] }];
-          }
-        }
+      treeData.forEach((nodeFirst) => {
+        this.addNode(nodeFirst, item[0], item[1]);
       });
     });
-    // Reorganize SubGroup
-    SubGroup.items.forEach((item) => {
-      treeData.forEach((node) => {
-        node.children &&
-          node.children.forEach((el) => {
-            if (el.name === item[1]) {
-              if (el.children) {
-                el.children.push({ name: item[0] });
-              } else {
-                el.children = [{ name: item[0] }];
-              }
-            }
-            el.children &&
-              el.children.forEach((element) => {
-                if (element.name === item[1]) {
-                  if (element.children) {
-                    element.children.push({ name: item[0] });
-                  } else {
-                    element.children = [{ name: item[0] }];
-                  }
-                }
-              });
-          });
-      });
-    });
+
     this.items = treeData;
+  },
+
+  mounted() {
+    this.firstTrigger = false;
+  },
+
+  methods: {
+    addNode(parentNode, name, childrenName) {
+      if (parentNode.name === name) {
+        parentNode.children.push({ name: childrenName, children: [] });
+      }
+    },
+    addSubGroup() {
+      // Because @update:open is triggered when mounting, it is necessary to prevent the first rendering
+      if (!this.firstTrigger && !this.isAddSub) {
+        // Reorganize SubGroup
+        SubGroup.items.forEach((item) => {
+          this.items.forEach((nodeFirst) => {
+            nodeFirst.children.forEach((nodeSecond) => {
+              this.addNode(nodeSecond, item[1], item[0]);
+              nodeSecond.children.forEach((nodeThird) => {
+                this.addNode(nodeThird, item[1], item[0]);
+              });
+            });
+          });
+        });
+        this.isAddSub = true;
+      }
+    },
   },
 };
 </script>
